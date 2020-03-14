@@ -1,0 +1,37 @@
+---
+- hosts: "{{ host }}"
+  become: yes
+  become_user: root
+  vars:
+    size: "512"
+  tasks:
+    - name: Download and install logrotate Red Hat
+      yum:
+        name: logrotate
+        state: present
+      when:
+        - ansible_facts['distribution'] == "Red Hat Enterprise Linux"
+
+    - name: Download and install logrotate Ubuntu
+      apt:
+        name: logrotate
+        state: present
+      when:
+        - ansible_facts['distribution'] == "Ubuntu"
+
+    - name: Configuration file to rotate apache logs.
+      template:
+        src: logrotate_template.j2
+        dest: /home/macuartin/logrotate.conf
+        mode: 0777
+    
+    - name: Restart logrotate
+      systemd:
+        state: restarted
+        name: nginx
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Run Lograte
+      shell: logrotate /home/macuartin/logrotate.conf --state 
+...
